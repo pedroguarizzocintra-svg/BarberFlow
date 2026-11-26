@@ -1,7 +1,7 @@
 # BarberFlow — Especificação do sistema
 
 **Versão:** 0.1 (proposta para revisão) | **Disciplina:** Modelagem de Software, 2026-2, Mackenzie  
-**Equipe:** Pedro e Gianlucca (ItsNeymar) | **Issue:** #1
+**Equipe:** Pedro e Gianlucca 10737829 (ItsNeymar) | **Issue:** #1
 
 Esta especificação é a fonte de verdade do comportamento esperado do MVP. Os requisitos são compromissos propostos, não funcionalidades já implementadas. Alterações devem passar por revisão e atualizar os requisitos, tarefas e testes correspondentes.
 
