@@ -2,8 +2,8 @@
 {% block title %}{{ role }} | BarberFlow{% endblock %}
 {% block content %}
 <p class="eyebrow">ÁREA DO {{ role | upper }}</p><h1>Olá, {{ g.user.name }}.</h1>
-<p class="muted">Autenticação ativa. Os módulos de negócio serão integrados nas próximas entregas.</p>
-<section class="card"><h2>Minha conta</h2><p>{{ g.user.email }}</p><p>Perfil: {{ role }}</p></section>
+<p class="muted">Gerencie sua operação pelo painel. Outros módulos estão em desenvolvimento.</p>
+<section class="card"><h2>Operação</h2>{% if g.user.role == "client" %}<p><a href="{{ url_for('agenda.appointments') }}">Catálogo e agendamentos</a></p><p><a href="{{ url_for('waitlist.page') }}">Fila de espera e notificações</a></p>{% elif g.user.role == "barber" %}<p><a href="{{ url_for('agenda.barber_agenda') }}">Minha agenda</a></p>{% else %}<p><a href="{{ url_for('catalog.admin') }}">Serviços, expediente e comissões</a></p>{% endif %}</section><section class="card"><h2>Minha conta</h2><p>{{ g.user.email }}</p><p>Perfil: {{ role }}</p></section>
 {% if users is not none %}
 <section class="card"><h2>Cadastrar profissional ou administrador</h2>
 <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
