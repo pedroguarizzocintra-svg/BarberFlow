@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Cadastro' if mode == 'register' else 'Entrar' }} | BarberFlow{% endblock %}
+{% block content %}
+<section class="auth card">
+<p class="eyebrow">GESTÃO DE BARBEARIAS</p>
+<h1>{{ 'Crie sua conta' if mode == 'register' else 'Bem-vindo de volta' }}</h1>
+<p class="muted">{{ 'Cadastre-se como cliente.' if mode == 'register' else 'Acesse sua área do BarberFlow.' }}</p>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% if mode == 'register' %}<label>Nome<input name="name" required maxlength="100" autocomplete="name"></label>{% endif %}
+<label>E-mail<input type="email" name="email" required maxlength="254" autocomplete="email"></label>
+<label>Senha<input type="password" name="password" required maxlength="128" {% if mode == 'register' %}minlength="10"{% endif %} autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}"></label>
+<button>{{ 'Criar conta' if mode == 'register' else 'Entrar' }}</button>
+</form>
+{% if mode == 'register' %}<p>Já tem conta? <a href="{{ url_for('auth.login') }}">Entrar</a></p>{% else %}<p>Primeira vez? <a href="{{ url_for('auth.register') }}">Criar conta de cliente</a></p>{% endif %}
+</section>{% endblock %}

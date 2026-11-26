@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ role }} | BarberFlow{% endblock %}
+{% block content %}
+<p class="eyebrow">ÁREA DO {{ role | upper }}</p><h1>Olá, {{ g.user.name }}.</h1>
+<p class="muted">Autenticação ativa. Os módulos de negócio serão integrados nas próximas entregas.</p>
+<section class="card"><h2>Minha conta</h2><p>{{ g.user.email }}</p><p>Perfil: {{ role }}</p></section>
+{% if users is not none %}
+<section class="card"><h2>Cadastrar profissional ou administrador</h2>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>Nome<input name="name" required maxlength="100"></label>
+<label>E-mail<input name="email" type="email" required maxlength="254"></label>
+<label>Senha inicial<input name="password" type="password" required minlength="10" maxlength="128" autocomplete="new-password"></label>
+<label>Perfil<select name="role"><option value="barber">Barbeiro</option><option value="admin">Administrador</option></select></label>
+<button>Criar conta</button></form>
+</section>
+<section class="card"><h2>Equipe cadastrada</h2>{% for user in users %}<p>{{ user.name }} · {{ 'Barbeiro' if user.role == 'barber' else 'Administrador' }}</p>{% endfor %}</section>
+{% endif %}{% endblock %}
