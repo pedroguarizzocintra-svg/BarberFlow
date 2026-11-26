@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Serviços e equipe</h1><a href="{{ url_for('auth.admin') }}">Voltar ao painel</a>
+{% macro service_form(s) %}<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="service">
+{% if s %}<input type="hidden" name="id" value="{{ s.id }}">{% endif %}
+<label>Nome<input name="name" required value="{{ s.name if s else '' }}"></label>
+<label>Descrição<input name="description" value="{{ s.description if s else '' }}"></label>
+<label>Imagem (URL HTTPS)<input name="image" value="{{ (s.image_path or '') if s else '' }}"></label>
+<label>Preço (R$)<input name="price" type="number" min="0" step=".01" required value="{{ '%.2f'|format(s.price_cents/100) if s else '' }}"></label>
+<label>Duração (min)<input name="duration" type="number" min="1" max="480" required value="{{ s.duration_min if s else 30 }}"></label>
+<label>Fidelidade<select name="eligible"><option value="0">Não</option><option value="1" {% if s and s.loyalty_eligible %}selected{% endif %}>Sim</option></select></label>
+<label>Disponibilidade<select name="active"><option value="1">Ativo</option><option value="0" {% if s and not s.active %}selected{% endif %}>Inativo</option></select></label><button>Salvar serviço</button></form>{% endmacro %}
+<section class="card"><h2>Novo serviço</h2>{{ service_form(none) }}</section>
+{% for s in services %}<section class="card"><h2>{{ s.name }}</h2>{{ service_form(s) }}</section>{% endfor %}
+<section class="card"><h2>Expediente</h2><form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="hours">
+<label>Barbeiro<select name="barber">{% for b in barbers %}<option value="{{ b.id }}">{{ b.name }}</option>{% endfor %}</select></label>
+<label>Dia<select name="weekday">{% for d in ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'] %}<option value="{{ loop.index0 }}">{{ d }}</option>{% endfor %}</select></label>
+<label>Início<input type="time" name="start" required></label><label>Fim<input type="time" name="end" required></label><button>Adicionar horário</button></form>
+{% for h in hours %}<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="remove_hours"><input type="hidden" name="id" value="{{ h.id }}"><p>{{ h.name }} · {{ ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][h.weekday] }} · {{ h.start_time }}–{{ h.end_time }}</p><button class="secondary">Remover horário</button></form>{% endfor %}</section>
+<section class="card"><h2>Comissões</h2>{% for b in barbers %}<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="commission"><input type="hidden" name="barber" value="{{ b.id }}"><label>{{ b.name }} (%)<input type="number" name="commission" min="0" max="100" step=".01" value="{{ b.commission_bps/100 }}"></label><button>Atualizar comissão</button></form>{% endfor %}</section>
+{% endblock %}
