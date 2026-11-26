@@ -24,11 +24,12 @@ CREATE TABLE IF NOT EXISTS services (
 CREATE TABLE IF NOT EXISTS appointments (
  id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL REFERENCES users(id),
  barber_id INTEGER NOT NULL REFERENCES barbers(id), service_id INTEGER NOT NULL REFERENCES services(id),
- start_at TEXT NOT NULL, end_at TEXT NOT NULL, CHECK(start_at < end_at),
+ start_at TEXT NOT NULL, end_at TEXT NOT NULL,
  status TEXT NOT NULL CHECK(status IN ('CONFIRMADO','EM_ATENDIMENTO','CONCLUIDO','CANCELADO','AUSENTE')),
  price_cents_snapshot INTEGER NOT NULL CHECK(price_cents_snapshot >= 0),
  commission_bps_snapshot INTEGER NOT NULL CHECK(commission_bps_snapshot BETWEEN 0 AND 10000),
- paid_cents INTEGER CHECK(paid_cents >= 0), completed_at TEXT
+ paid_cents INTEGER CHECK(paid_cents >= 0), completed_at TEXT,
+ CHECK(start_at < end_at)
 );
 CREATE TABLE IF NOT EXISTS supplies (
  id INTEGER PRIMARY KEY, name TEXT NOT NULL, quantity INTEGER NOT NULL CHECK(quantity >= 0),
@@ -69,8 +70,9 @@ CREATE TABLE IF NOT EXISTS loyalty_credits (
 CREATE TABLE IF NOT EXISTS waitlist (
  id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL REFERENCES users(id),
  service_id INTEGER NOT NULL REFERENCES services(id), barber_id INTEGER NOT NULL REFERENCES barbers(id),
- window_start TEXT NOT NULL, window_end TEXT NOT NULL, CHECK(window_start < window_end),
- created_at TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('ATIVA','RETIRADA','ATENDIDA'))
+ window_start TEXT NOT NULL, window_end TEXT NOT NULL,
+ created_at TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('ATIVA','RETIRADA','ATENDIDA')),
+ CHECK(window_start < window_end)
 );
 CREATE TABLE IF NOT EXISTS offers (
  id INTEGER PRIMARY KEY, waitlist_id INTEGER NOT NULL REFERENCES waitlist(id),
