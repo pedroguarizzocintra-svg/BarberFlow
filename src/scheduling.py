@@ -49,13 +49,17 @@ def available(db, barber_id, start, end, skip_appointment=0, skip_offer=0, curre
         return False
     return True
 
-def reserve(db, client_id, service_id, barber_id, start, skip_offer=0, current=None):
+def reserve(db, client_id, service_id, barber_id, start, skip_offer=0, current=None, reward_id=None):
     s,b = service_barber(db,service_id,barber_id)
     end = start+timedelta(minutes=s["duration_min"])
     if not available(db,barber_id,start,end,skip_offer=skip_offer,current=current):
         raise ValueError("Horário indisponível ou fora do expediente.")
-    return db.execute("""INSERT INTO appointments(client_id,barber_id,service_id,start_at,end_at,status,price_cents_snapshot,commission_bps_snapshot)
+    aid = db.execute("""INSERT INTO appointments(client_id,barber_id,service_id,start_at,end_at,status,price_cents_snapshot,commission_bps_snapshot)
         VALUES(?,?,?,?,?,'CONFIRMADO',?,?)""",(client_id,barber_id,service_id,stamp(start),stamp(end),s["price_cents"],b["commission_bps"])).lastrowid
+    if reward_id is not None:
+        from .loyalty import reserve_reward
+        reserve_reward(db,client_id,aid,reward_id)
+    return aid
 
 def owned(db, appointment_id, client_id):
     row=db.execute("SELECT * FROM appointments WHERE id=? AND client_id=?",(appointment_id,client_id)).fetchone()
@@ -132,7 +136,7 @@ def appointments():
             with transaction() as db:
                 action=request.form.get("action")
                 if action=="book":
-                    reserve(db,g.user["id"],int(request.form["service"]),int(request.form["barber"]),parse(request.form["start"]))
+                    reserve(db,g.user["id"],int(request.form["service"]),int(request.form["barber"]),parse(request.form["start"]),reward_id=int(request.form["reward"]) if request.form.get("reward") else None)
                 elif action=="cancel":
                     cancel(db,int(request.form["id"]),g.user["id"])
                 elif action=="reschedule":
@@ -147,7 +151,7 @@ def appointments():
         return redirect(url_for("agenda.appointments"))
     db=get_db()
     services,barbers=options(db)
-    rows=db.execute("""SELECT a.*,s.name AS service,u.name AS barber FROM appointments a JOIN services s ON s.id=a.service_id
+    rows=db.execute("""SELECT a.*,s.name AS service,u.name AS barber,EXISTS(SELECT 1 FROM rewards r WHERE r.appointment_id=a.id AND r.status IN ('RESERVADA','UTILIZADA')) AS has_reward FROM appointments a JOIN services s ON s.id=a.service_id
         JOIN barbers b ON b.id=a.barber_id JOIN users u ON u.id=b.user_id WHERE a.client_id=? ORDER BY a.start_at DESC""",(g.user["id"],)).fetchall()
     times=[]
     selected_service=request.args.get("service",type=int)
@@ -158,7 +162,9 @@ def appointments():
             times=slots(db,selected_service,selected_barber,date.fromisoformat(day))
         except (ValueError,OverflowError):
             flash("Seleção inválida.","error")
-    return render_template("appointments.html",services=services,barbers=barbers,rows=rows,times=times,
+    from .loyalty import available_rewards
+    rewards=available_rewards(db,g.user["id"]) if any(s["id"]==selected_service and s["loyalty_eligible"] and s["price_cents"]>0 for s in services) else []
+    return render_template("appointments.html",rewards=rewards,services=services,barbers=barbers,rows=rows,times=times,
                            selected_service=selected_service,selected_barber=selected_barber,day=day,local=local)
 
 @bp.route("/barbeiro/agenda",methods=["GET","POST"])
@@ -178,6 +184,6 @@ def barber_agenda():
         except (ValueError,KeyError) as exc:
             flash(str(exc),"error")
         return redirect(url_for("agenda.barber_agenda"))
-    rows=get_db().execute("""SELECT a.*,s.name AS service,u.name AS client FROM appointments a JOIN barbers b ON b.id=a.barber_id
+    rows=get_db().execute("""SELECT a.*,s.name AS service,u.name AS client,EXISTS(SELECT 1 FROM rewards r WHERE r.appointment_id=a.id AND r.status='RESERVADA') AS has_reward FROM appointments a JOIN barbers b ON b.id=a.barber_id
         JOIN services s ON s.id=a.service_id JOIN users u ON u.id=a.client_id WHERE b.user_id=? ORDER BY a.start_at""",(g.user["id"],)).fetchall()
     return render_template("barber_agenda.html",rows=rows,local=local)
