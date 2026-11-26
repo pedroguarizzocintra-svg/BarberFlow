@@ -1,2 +1,2 @@
 # BarberFlow
-Gestão de Barbearias 
+Gestão de Barbearias.
