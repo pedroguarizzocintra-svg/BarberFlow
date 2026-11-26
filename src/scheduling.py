@@ -30,7 +30,7 @@ def service_barber(db, service_id, barber_id):
 
 def available(db, barber_id, start, end, skip_appointment=0, skip_offer=0, current=None):
     current = current or now()
-    if start <= current or end <= start:
+    if start <= current or end <= start or start.second or start.microsecond or end.second or end.microsecond:
         return False
     a,b = start.astimezone(LOCAL),end.astimezone(LOCAL)
     if a.date()!=b.date():
@@ -167,7 +167,11 @@ def barber_agenda():
     if request.method=="POST":
         try:
             with transaction() as db:
-                transition(db,int(request.form["id"]),g.user["id"],request.form["action"])
+                if request.form["action"]=="complete":
+                    from .operations import complete
+                    complete(db,int(request.form["id"]),g.user["id"])
+                else:
+                    transition(db,int(request.form["id"]),g.user["id"],request.form["action"])
             flash("Atendimento atualizado.","success")
         except PermissionError:
             abort(403)
