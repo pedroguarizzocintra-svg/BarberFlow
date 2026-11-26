@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from flask import Flask, redirect, url_for, g, render_template
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from . import db, auth
+from . import db, auth, catalog, scheduling, waitlist
 
 csrf = CSRFProtect()
 
@@ -25,6 +25,9 @@ def create_app(test_config=None):
     db.init_app(app)
     csrf.init_app(app)
     auth.init_app(app)
+    app.register_blueprint(catalog.bp)
+    app.register_blueprint(scheduling.bp)
+    app.register_blueprint(waitlist.bp)
     @app.get("/")
     def index():
         if g.user is None:
