@@ -93,6 +93,7 @@ def page():
     if request.method=="POST":
         try:
             with transaction() as db:
+                expire_offers(db)
                 action=request.form.get("action")
                 if action=="join":
                     join(db,g.user["id"],int(request.form["service"]),int(request.form["barber"]),parse(request.form["start"]),parse(request.form["end"]))

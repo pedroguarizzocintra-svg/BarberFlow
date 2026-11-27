@@ -1,9 +1,9 @@
 """Fábrica da aplicação BarberFlow (T01)."""
 import os
 from pathlib import Path
-from flask import Flask, redirect, url_for, g, render_template
+from flask import Flask, redirect, url_for, g, render_template, request
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from . import db, auth, catalog, scheduling, waitlist, loyalty, inventory, finance, customer
+from . import db, auth, catalog, scheduling, waitlist, loyalty, inventory, finance, customer, demo
 
 csrf = CSRFProtect()
 
@@ -32,6 +32,21 @@ def create_app(test_config=None):
     app.register_blueprint(inventory.bp)
     app.register_blueprint(finance.bp)
     app.register_blueprint(customer.bp)
+    app.cli.add_command(demo.seed_catalog)
+    if not app.testing:
+        import logging
+        app.logger.setLevel(logging.INFO)
+    @app.after_request
+    def protections(response):
+        response.headers['X-Content-Type-Options']='nosniff'
+        response.headers['X-Frame-Options']='DENY'
+        response.headers['Referrer-Policy']='no-referrer'
+        response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'"
+        if getattr(g,'user',None) is not None or request.endpoint in ('auth.login','auth.register'):
+            response.headers['Cache-Control']='no-store'
+        if request.method=='POST':
+            app.logger.info('event=mutation operation=%s http_status=%s',request.endpoint or 'unknown',response.status_code)
+        return response
     @app.get("/")
     def index():
         if g.user is None:

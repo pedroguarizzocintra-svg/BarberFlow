@@ -3,6 +3,7 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 import click
+from flask.cli import with_appcontext
 from flask import current_app, g
 
 def get_db():
@@ -34,6 +35,7 @@ def init_db():
     get_db().executescript(sql)
 
 @click.command("init-db")
+@with_appcontext
 def init_db_command():
     init_db()
     click.echo("Banco inicializado sem apagar dados.")
