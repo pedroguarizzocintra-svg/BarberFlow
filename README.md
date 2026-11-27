@@ -85,6 +85,7 @@ Flask/Jinja, SQLite e CSS responsivo; funções de domínio em módulos, transa�
 - [Plano técnico](plan.md)
 - [Tasks e rastreabilidade](tasks.md)
 - [Documentação e ADRs](docs/)
+- [Diagramas UML](docs/uml.md)
 - [Diretrizes SDD](.specify/)
 - [Revisão multidimensional](docs/review/README.md)
 - [SSDLC](docs/review/ssdlc.md)
