@@ -1,8 +1,10 @@
 """Dados fictícios, opcionais e não destrutivos para demonstração."""
 import click
+from flask.cli import with_appcontext
 from .db import get_db,transaction
 
 @click.command("seed-catalog")
+@with_appcontext
 def seed_catalog():
     with transaction() as db:
         barber=db.execute("SELECT b.id FROM barbers b JOIN users u ON u.id=b.user_id WHERE u.email='barbeiro@example.test'").fetchone()
