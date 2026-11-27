@@ -107,12 +107,14 @@ def dashboard():
 @bp.get("/cliente")
 @require_role("client")
 def client():
-    return render_template("dashboard.html", role="Cliente", users=None)
+    from .dashboards import context
+    return render_template("dashboard.html", role="Cliente", users=None, **context(get_db(),"client"))
 
 @bp.get("/barbeiro")
 @require_role("barber")
 def barber():
-    return render_template("dashboard.html", role="Barbeiro", users=None)
+    from .dashboards import context
+    return render_template("dashboard.html", role="Barbeiro", users=None, **context(get_db(),"barber"))
 
 @bp.route("/admin", methods=["GET","POST"])
 @require_role("admin")
@@ -133,7 +135,8 @@ def admin():
             flash("Conta criada.", "success")
         return redirect(url_for("auth.admin"))
     users = get_db().execute("SELECT id,name,email,role FROM users WHERE role IN ('barber','admin') ORDER BY id").fetchall()
-    return render_template("dashboard.html", role="Administrador", users=users)
+    from .dashboards import context
+    return render_template("dashboard.html", role="Administrador", users=users, **context(get_db(),"admin"))
 
 @click.command("create-admin")
 @click.option("--name", prompt=True)

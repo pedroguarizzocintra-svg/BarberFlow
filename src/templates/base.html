@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="pt-BR">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{% block title %}BarberFlow{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head>
-<body><header><a class="brand" href="{{ url_for('index') }}">Barber<span>Flow</span></a>
-{% if g.user %}<form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="secondary">Sair</button></form>{% endif %}</header>
-<main>{% for category,message in get_flashed_messages(with_categories=true) %}<p role="status" class="notice {{ category }}">{{ message }}</p>{% endfor %}
-{% block content %}{% endblock %}</main>
-<footer>BarberFlow · Projeto acadêmico</footer></body></html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}BarberFlow{% endblock %}</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head>
+<body><a class="skip-link" href="#main">Ir ao conteúdo</a><header><a class="brand" href="{{ url_for('index') }}"><span class="brand-mark" aria-hidden="true">✂</span> Barber<span>Flow</span></a>
+{% if g.user %}<div class="header-account"><span class="account-name">{{ g.user.name }}</span><form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="secondary">Sair</button></form></div>{% endif %}</header>
+{% if g.user %}<nav aria-label="Navegação principal"><div class="nav-inner">
+{% set links = [('auth.client','Início'),('agenda.appointments','Agendar'),('waitlist.page','Fila de espera'),('loyalty.page','Fidelidade'),('customer.history','Histórico'),('customer.profile','Perfil')] if g.user.role=='client' else ([('auth.barber','Painel'),('agenda.barber_agenda','Agenda'),('finance.barber','Comissões')] if g.user.role=='barber' else [('auth.admin','Visão geral'),('catalog.admin','Serviços e equipe'),('inventory.page','Estoque'),('finance.admin','Financeiro')]) %}
+{% for endpoint,label in links %}<a href="{{ url_for(endpoint) }}" {% if request.endpoint==endpoint %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</div></nav>{% endif %}
+<main id="main">{% for category,message in get_flashed_messages(with_categories=true) %}<p role="status" class="notice {{ category }}">{{ message }}</p>{% endfor %}{% block content %}{% endblock %}</main>
+<footer>BarberFlow <span>·</span> Gestão de barbearias <span>·</span> Projeto acadêmico</footer></body></html>

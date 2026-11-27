@@ -1,17 +1,18 @@
-{% extends "base.html" %}
-{% block title %}{{ role }} | BarberFlow{% endblock %}
-{% block content %}
-<p class="eyebrow">ÁREA DO {{ role | upper }}</p><h1>Olá, {{ g.user.name }}.</h1>
-<p class="muted">Gerencie sua operação pelo painel. Outros módulos estão em desenvolvimento.</p>
-<section class="card"><h2>Operação</h2>{% if g.user.role == "client" %}<p><a href="{{ url_for('agenda.appointments') }}">Catálogo e agendamentos</a></p><p><a href="{{ url_for('waitlist.page') }}">Fila de espera e notificações</a></p><p><a href="{{ url_for('loyalty.page') }}">Fidelidade e recompensas</a></p>{% elif g.user.role == "barber" %}<p><a href="{{ url_for('agenda.barber_agenda') }}">Minha agenda</a></p><p><a href="{{ url_for('finance.barber') }}">Minhas comissões</a></p>{% else %}<p><a href="{{ url_for('catalog.admin') }}">Serviços, expediente e comissões</a></p><p><a href="{{ url_for('inventory.page') }}">Estoque e alertas</a></p><p><a href="{{ url_for('finance.admin') }}">Financeiro</a></p>{% endif %}</section><section class="card"><h2>Minha conta</h2><p>{{ g.user.email }}</p><p>Perfil: {{ role }}</p></section>
-{% if users is not none %}
-<section class="card"><h2>Cadastrar profissional ou administrador</h2>
-<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<label>Nome<input name="name" required maxlength="100"></label>
-<label>E-mail<input name="email" type="email" required maxlength="254"></label>
-<label>Senha inicial<input name="password" type="password" required minlength="10" maxlength="128" autocomplete="new-password"></label>
-<label>Perfil<select name="role"><option value="barber">Barbeiro</option><option value="admin">Administrador</option></select></label>
-<button>Criar conta</button></form>
-</section>
-<section class="card"><h2>Equipe cadastrada</h2>{% for user in users %}<p>{{ user.name }} · {{ 'Barbeiro' if user.role == 'barber' else 'Administrador' }}</p>{% endfor %}</section>
-{% endif %}{% endblock %}
+{% extends "base.html" %}{% block title %}{{ role }} | BarberFlow{% endblock %}{% block content %}
+{% macro metric(label,value,detail='') %}<div class="metric"><small>{{ label }}</small><strong>{{ value }}</strong>{% if detail %}<p>{{ detail }}</p>{% endif %}</div>{% endmacro %}
+<div class="page-intro"><p class="eyebrow">ESPAÇO DO {{ role|upper }}</p><h1>Olá, {{ g.user.name }}.</h1><p class="muted">{% if g.user.role=='client' %}Seu estilo, seu tempo. Agende seu próximo atendimento.{% else %}Acompanhe os números e a operação da barbearia.{% endif %}</p></div>
+{% if g.user.role=='client' %}
+<section class="hero"><div><p class="eyebrow">BARBERFLOW EXPERIENCE</p><h2>Seu próximo visual começa aqui.</h2><p>Escolha o serviço, o profissional e o melhor horário para você.</p><a class="cta" href="{{ url_for('agenda.appointments') }}">Agendar atendimento →</a></div><div class="hero-symbol" aria-hidden="true">✂</div></section>
+<div class="metric-grid">{{ metric('Visitas concluídas',metrics.visits) }}{{ metric('Gastos acumulados',money(metrics.spent)) }}{{ metric('Fidelidade',metrics.credits|string+'/10 cortes') }}{{ metric('Recompensas disponíveis',metrics.rewards) }}</div>
+<div class="two-col"><section class="card"><h2>Próximos atendimentos</h2>{% for a in metrics.upcoming %}<article class="entry"><strong>{{ a.service }}</strong><p>{{ a.barber }} · {{ local(a.start_at) }}</p></article>{% else %}<p class="muted">Você não tem agendamentos futuros.</p>{% endfor %}<a href="{{ url_for('agenda.appointments') }}">Gerenciar agendamentos →</a></section>
+<section class="card"><h2>Notificações recentes</h2>{% for n in metrics.notes %}<article class="entry"><p>{{ n.message }}</p><small>{{ local(n.created_at) }}</small></article>{% else %}<p class="muted">Nenhuma notificação.</p>{% endfor %}<a href="{{ url_for('waitlist.page') }}">Consultar fila de espera →</a></section></div>
+{% else %}
+<form class="period" method="get"><label>De<input type="date" name="start" value="{{ start }}" required></label><label>Até<input type="date" name="end" value="{{ end }}" required></label><button>Aplicar período</button></form>
+{% if g.user.role=='admin' %}
+<div class="metric-grid">{{ metric('Faturamento',money(metrics.revenue)) }}{{ metric('Resultado estimado',money(metrics.result)) }}{{ metric('Atendimentos concluídos',metrics.visits) }}{{ metric('Ticket médio',money(metrics.ticket)) }}{{ metric('Comissões',money(metrics.commission)) }}{{ metric('Despesas',money(metrics.expense)) }}{{ metric('Ocupação de hoje',metrics.occupancy|string+'%','Independente do período') }}{{ metric('Alertas de estoque',metrics.alerts|length) }}</div>
+<div class="two-col"><section class="card"><h2>Ocupação prevista de hoje</h2><progress max="100" value="{{ metrics.occupancy }}" aria-label="Ocupação prevista"></progress><p>{{ metrics.occupancy }}% dos minutos disponíveis reservados.</p><a href="{{ url_for('catalog.admin') }}">Gerenciar expediente →</a></section><section class="card"><h2>Reposição de estoque</h2>{% for item in metrics.alerts %}<p class="notice">{{ item.name }} · {{ item.quantity }} un. (mín. {{ item.min_quantity }})</p>{% else %}<p class="muted">Nenhum alerta de reposição.</p>{% endfor %}<a href="{{ url_for('inventory.page') }}">Gerenciar estoque →</a></section></div>
+<section class="card"><h2>Cadastrar profissional ou administrador</h2><form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="two-col"><label>Nome<input name="name" required maxlength="100"></label><label>E-mail<input name="email" type="email" required maxlength="254"></label><label>Senha inicial<input name="password" type="password" required minlength="10" maxlength="128" autocomplete="new-password"></label><label>Perfil<select name="role"><option value="barber">Barbeiro</option><option value="admin">Administrador</option></select></label></div><button>Criar conta</button></form><h3>Equipe cadastrada</h3>{% for user in users %}<p class="entry">{{ user.name }} · {{ 'Barbeiro' if user.role=='barber' else 'Administrador' }}</p>{% endfor %}</section>
+{% else %}
+<div class="metric-grid">{{ metric('Atendimentos concluídos',metrics.visits) }}{{ metric('Comissões',money(metrics.commission)) }}{{ metric('Avaliação média',('%.1f / 5'|format(metrics.rating)) if metrics.rating is not none else 'Sem avaliações') }}</div>
+<section class="card"><h2>Minha agenda</h2>{% for a in metrics.agenda %}<article class="entry"><strong>{{ a.service }} · {{ a.client }}</strong><p>{{ local(a.start_at) }} · {{ a.status }}</p></article>{% else %}<p class="muted">Nenhum atendimento ativo.</p>{% endfor %}<a class="cta" href="{{ url_for('agenda.barber_agenda') }}">Abrir minha agenda →</a></section>
+{% endif %}{% endif %}{% endblock %}

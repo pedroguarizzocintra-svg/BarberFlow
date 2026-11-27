@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from flask import Flask, redirect, url_for, g, render_template
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from . import db, auth, catalog, scheduling, waitlist, loyalty, inventory, finance
+from . import db, auth, catalog, scheduling, waitlist, loyalty, inventory, finance, customer
 
 csrf = CSRFProtect()
 
@@ -31,6 +31,7 @@ def create_app(test_config=None):
     app.register_blueprint(loyalty.bp)
     app.register_blueprint(inventory.bp)
     app.register_blueprint(finance.bp)
+    app.register_blueprint(customer.bp)
     @app.get("/")
     def index():
         if g.user is None:
