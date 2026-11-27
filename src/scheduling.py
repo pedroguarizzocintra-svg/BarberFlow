@@ -134,6 +134,8 @@ def appointments():
     if request.method=="POST":
         try:
             with transaction() as db:
+                from .waitlist import expire_offers
+                expire_offers(db)
                 action=request.form.get("action")
                 if action=="book":
                     reserve(db,g.user["id"],int(request.form["service"]),int(request.form["barber"]),parse(request.form["start"]),reward_id=int(request.form["reward"]) if request.form.get("reward") else None)
