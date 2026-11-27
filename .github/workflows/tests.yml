@@ -15,3 +15,12 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt
       - run: python -m pytest -q
+      - run: python -m pip install playwright==1.51.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python -m scripts.validate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validation-evidence
+          path: evidence/
+          if-no-files-found: warn
