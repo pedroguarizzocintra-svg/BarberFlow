@@ -3,6 +3,7 @@ import re
 import sqlite3
 from functools import wraps
 import click
+from flask.cli import with_appcontext
 from flask import Blueprint, abort, current_app, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from .db import get_db, transaction
@@ -142,6 +143,7 @@ def admin():
 @click.option("--name", prompt=True)
 @click.option("--email", prompt=True)
 @click.password_option()
+@with_appcontext
 def create_admin_command(name, email, password):
     try:
         create_user(name,email,password,"admin")
@@ -151,6 +153,7 @@ def create_admin_command(name, email, password):
 
 @click.command("seed-demo")
 @click.password_option(help="Senha local para as contas fictícias; não use senha real.")
+@with_appcontext
 def seed_demo(password):
     accounts = [("Cliente Demo","cliente@example.test","client"),
                 ("Barbeiro Demo","barbeiro@example.test","barber"),
